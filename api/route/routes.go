@@ -3,7 +3,7 @@ package route
 import (
 	"github.com/arvinpaundra/cent/payment/api/middleware"
 	"github.com/arvinpaundra/cent/payment/api/route/donate"
-	"github.com/arvinpaundra/cent/payment/application/resthttp"
+	"github.com/arvinpaundra/cent/payment/application/rest"
 	"github.com/arvinpaundra/cent/payment/core/validator"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -13,11 +13,11 @@ type Routes struct {
 	g    *gin.Engine
 	db   *gorm.DB
 	vld  *validator.Validator
-	cont resthttp.Controller
+	cont rest.Controller
 }
 
 func NewRoutes(g *gin.Engine, db *gorm.DB, vld *validator.Validator) *Routes {
-	controller := resthttp.NewController(db, vld)
+	controller := rest.NewController(db, vld)
 
 	g.Use(middleware.Cors())
 	g.Use(gin.Recovery())

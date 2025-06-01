@@ -1,4 +1,4 @@
-package resthttp
+package rest
 
 import (
 	"github.com/arvinpaundra/cent/payment/core/validator"

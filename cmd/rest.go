@@ -62,7 +62,7 @@ var restCmd = &cobra.Command{
 			"postgres": func(_ context.Context) error {
 				return pgsql.Close()
 			},
-			"grpc-client": func(ctx context.Context) error {
+			"grpc-client": func(_ context.Context) error {
 				return grpcClient.Close()
 			},
 		})
