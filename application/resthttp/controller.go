@@ -10,8 +10,8 @@ type Controller struct {
 	validator *validator.Validator
 }
 
-func NewController(db *gorm.DB, validator *validator.Validator) *Controller {
-	return &Controller{
+func NewController(db *gorm.DB, validator *validator.Validator) Controller {
+	return Controller{
 		db:        db,
 		validator: validator,
 	}
