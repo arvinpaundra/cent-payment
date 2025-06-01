@@ -7,7 +7,9 @@ import (
 	"net"
 	"time"
 
+	"github.com/arvinpaundra/cent/payment/config"
 	"github.com/arvinpaundra/cent/payment/core"
+	"github.com/arvinpaundra/cent/payment/database/sqlpkg"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 )
@@ -18,6 +20,12 @@ var grpcCmd = &cobra.Command{
 	Use:   "grpc",
 	Short: "Start gRPC server",
 	Run: func(cmd *cobra.Command, args []string) {
+		config.LoadEnv(".", ".env", "env")
+
+		pgsql := sqlpkg.NewPostgres()
+
+		sqlpkg.NewConnection(pgsql)
+
 		srv := grpc.NewServer()
 
 		go func() {
@@ -35,10 +43,13 @@ var grpcCmd = &cobra.Command{
 		}()
 
 		wait := core.GracefulShutdown(context.Background(), 30*time.Second, map[string]func(ctx context.Context) error{
-			"grpc-server": func(ctx context.Context) error {
-				srv.Stop()
+			"grpc-server": func(_ context.Context) error {
+				srv.GracefulStop()
 
 				return nil
+			},
+			"postgres": func(_ context.Context) error {
+				return pgsql.Close()
 			},
 		})
 
@@ -47,6 +58,6 @@ var grpcCmd = &cobra.Command{
 }
 
 func init() {
-	grpcCmd.Flags().StringVarP(&grpcPort, "port", "p", "8093", "bind grpc to port. default: 8093")
+	grpcCmd.Flags().StringVarP(&grpcPort, "port", "p", "8093", "bind grpc to port")
 	rootCmd.AddCommand(grpcCmd)
 }

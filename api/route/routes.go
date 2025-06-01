@@ -2,6 +2,7 @@ package route
 
 import (
 	"github.com/arvinpaundra/cent/payment/api/middleware"
+	"github.com/arvinpaundra/cent/payment/api/route/donate"
 	"github.com/arvinpaundra/cent/payment/application/resthttp"
 	"github.com/arvinpaundra/cent/payment/core/validator"
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,7 @@ type Routes struct {
 	g    *gin.Engine
 	db   *gorm.DB
 	vld  *validator.Validator
-	cont *resthttp.Controller
+	cont resthttp.Controller
 }
 
 func NewRoutes(g *gin.Engine, db *gorm.DB, vld *validator.Validator) *Routes {
@@ -32,21 +33,20 @@ func NewRoutes(g *gin.Engine, db *gorm.DB, vld *validator.Validator) *Routes {
 	}
 }
 
-func (r *Routes) GatherRoutes() {
-	r.public()
+func (r *Routes) WithPublic() *Routes {
+	v1 := r.g.Group("/api/v1")
 
-	r.private()
+	donate.PublicRoute(v1, r.cont)
 
-	r.internal()
+	return r
 }
 
-func (r *Routes) public() {
+func (r *Routes) WithPrivate() *Routes {
 	// v1 := r.g.Group("/api/v1")
+
+	return r
 }
 
-func (r *Routes) private() {
-	// v1 := r.g.Group("/api/v1")
-}
-
-func (r *Routes) internal() {
+func (r *Routes) WithInternal() *Routes {
+	return r
 }

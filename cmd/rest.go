@@ -10,10 +10,12 @@ import (
 	"github.com/arvinpaundra/cent/payment/api/route"
 	"github.com/arvinpaundra/cent/payment/config"
 	"github.com/arvinpaundra/cent/payment/core"
+	"github.com/arvinpaundra/cent/payment/core/grpc"
 	"github.com/arvinpaundra/cent/payment/core/validator"
 	"github.com/arvinpaundra/cent/payment/database/sqlpkg"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var restPort string
@@ -30,15 +32,21 @@ var restCmd = &cobra.Command{
 
 		g := gin.New()
 
-		route.NewRoutes(
-			g,
-			sqlpkg.GetConnection(),
-			validator.NewValidator(),
-		).GatherRoutes()
+		_ = route.NewRoutes(g, sqlpkg.GetConnection(), validator.NewValidator()).
+			WithPublic().
+			WithPrivate().
+			WithInternal()
 
 		srv := http.Server{
 			Addr:    fmt.Sprintf(":%s", restPort),
 			Handler: g,
+		}
+
+		userClientAddr := viper.GetString("USER_SERVICE_ADDR")
+
+		grpcClient, err := grpc.NewClientFactory(grpc.ClientConfig{UserClientAddr: userClientAddr})
+		if err != nil {
+			log.Fatalf("failed to dial grpc client: %s", err.Error())
 		}
 
 		go func() {
@@ -54,6 +62,9 @@ var restCmd = &cobra.Command{
 			"postgres": func(_ context.Context) error {
 				return pgsql.Close()
 			},
+			"grpc-client": func(ctx context.Context) error {
+				return grpcClient.Close()
+			},
 		})
 
 		_ = <-wait
@@ -61,6 +72,6 @@ var restCmd = &cobra.Command{
 }
 
 func init() {
-	restCmd.Flags().StringVarP(&restPort, "port", "p", "8090", "bind rest server to port. default: 8090")
+	restCmd.Flags().StringVarP(&restPort, "port", "p", "8090", "bind rest server to port")
 	rootCmd.AddCommand(restCmd)
 }
