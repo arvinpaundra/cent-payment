@@ -1,11 +1,11 @@
 package donate
 
 import (
-	"github.com/arvinpaundra/cent/payment/application/resthttp"
+	"github.com/arvinpaundra/cent/payment/application/rest"
 	"github.com/gin-gonic/gin"
 )
 
-func PublicRoute(g *gin.RouterGroup, cont resthttp.Controller) {
+func PublicRoute(g *gin.RouterGroup, cont rest.Controller) {
 	donate := g.Group("/donate")
 
 	donate.POST("", cont.CreateDonation)
