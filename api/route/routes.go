@@ -4,6 +4,7 @@ import (
 	"github.com/arvinpaundra/cent/payment/api/middleware"
 	"github.com/arvinpaundra/cent/payment/api/route/donate"
 	"github.com/arvinpaundra/cent/payment/application/rest"
+	"github.com/arvinpaundra/cent/payment/core/grpc"
 	"github.com/arvinpaundra/cent/payment/core/validator"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -16,8 +17,8 @@ type Routes struct {
 	cont rest.Controller
 }
 
-func NewRoutes(g *gin.Engine, db *gorm.DB, vld *validator.Validator) *Routes {
-	controller := rest.NewController(db, vld)
+func NewRoutes(g *gin.Engine, grpcClient *grpc.Client, db *gorm.DB, vld *validator.Validator) *Routes {
+	controller := rest.NewController(db, grpcClient, vld)
 
 	g.Use(middleware.Cors())
 	g.Use(gin.Recovery())

@@ -28,7 +28,7 @@ func NewMidtrans(serverKey, mode string) Midtrans {
 	}
 }
 
-func (r Midtrans) Pay(ctx context.Context, pg entity.PaymentGateway) (string, error) {
+func (r Midtrans) Pay(ctx context.Context, pg *entity.PaymentGateway) (string, error) {
 	// TODO: future we will migrate to coreapi to improvise UI/UX
 	client := snap.Client{}
 
@@ -44,7 +44,7 @@ func (r Midtrans) Pay(ctx context.Context, pg entity.PaymentGateway) (string, er
 	return url, nil
 }
 
-func (r Midtrans) parse(pg entity.PaymentGateway) snap.Request {
+func (r Midtrans) parse(pg *entity.PaymentGateway) snap.Request {
 	payload := snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  pg.Code,

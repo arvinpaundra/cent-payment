@@ -7,10 +7,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arvinpaundra/cent/payment/core/trait"
 	"github.com/arvinpaundra/cent/payment/domain/donation/constant"
 )
 
 type Payment struct {
+	trait.Updateable
+
 	ID          int64
 	UserId      int64
 	Code        string
@@ -60,18 +63,28 @@ func (e *Payment) SetBankName(bankName string) {
 	e.BankName = &bankName
 }
 
+func (e *Payment) SetPaymentLink(url string) {
+	e.PaymentLink = &url
+}
+
 func (e *Payment) SetPaymentDetail(pd *PaymentDetail) {
 	e.PaymentDetail = &PaymentDetail{
-		Name:  pd.Name,
-		Phone: pd.Phone,
-		Email: pd.Email,
+		ContentId:  pd.ContentId,
+		Name:       pd.Name,
+		Message:    pd.Message,
+		Phone:      pd.Phone,
+		Email:      pd.Email,
+		CampaignId: pd.CampaignId,
 	}
 }
 
 type PaymentDetail struct {
-	ID        int64
-	PaymentId int64
-	Name      string
-	Phone     *string
-	Email     *string
+	ID         int64
+	PaymentId  int64
+	ContentId  int64
+	Name       string
+	Message    string
+	CampaignId *int64
+	Phone      *string
+	Email      *string
 }

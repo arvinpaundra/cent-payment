@@ -2,10 +2,13 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS payment_details (
 	id BIGSERIAL PRIMARY KEY,
-	payment_id BIGSERIAL NOT NULL,
+	payment_id BIGINT NOT NULL,
+	content_id BIGINT NOT NULL,
 	name VARCHAR(50) NOT NULL,
+	message TEXT NOT NULL,
 	phone VARCHAR(15),
 	email VARCHAR(50),
+	campaign_id BIGINT,
 	created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 	FOREIGN KEY (payment_id) REFERENCES payments(id)

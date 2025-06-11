@@ -32,21 +32,25 @@ var restCmd = &cobra.Command{
 
 		g := gin.New()
 
-		_ = route.NewRoutes(g, sqlpkg.GetConnection(), validator.NewValidator()).
-			WithPublic().
+		grpcClient := grpc.NewClient(
+			grpc.ClientConfig{
+				UserClientAddr:    viper.GetString("USER_SERVICE_ADDR"),
+				ContentClientAddr: viper.GetString("CONTENT_SERVICE_ADDR"),
+			},
+		)
+
+		_ = route.NewRoutes(
+			g,
+			grpcClient,
+			sqlpkg.GetConnection(),
+			validator.NewValidator(),
+		).WithPublic().
 			WithPrivate().
 			WithInternal()
 
 		srv := http.Server{
 			Addr:    fmt.Sprintf(":%s", restPort),
 			Handler: g,
-		}
-
-		userClientAddr := viper.GetString("USER_SERVICE_ADDR")
-
-		grpcClient, err := grpc.NewClientFactory(grpc.ClientConfig{UserClientAddr: userClientAddr})
-		if err != nil {
-			log.Fatalf("failed to dial grpc client: %s", err.Error())
 		}
 
 		go func() {

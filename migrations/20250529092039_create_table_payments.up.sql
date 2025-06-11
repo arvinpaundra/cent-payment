@@ -6,17 +6,17 @@ CREATE TYPE payment_status AS ENUM ('pending', 'succeed', 'failed', 'expired');
 
 CREATE TYPE payment_type AS ENUM ('donation', 'others');
 
-CREATE TYPE payment_method AS ENUM ('gopay', 'shopeepay', 'qris', 'bank_transfer', 'others');
+CREATE TYPE payment_method AS ENUM ('gopay', 'shopeepay', 'qris', 'bank_transfer', 'none', 'others');
 
 CREATE TABLE IF NOT EXISTS payments (
 	id BIGSERIAL PRIMARY KEY,
-	user_id BIGSERIAL NOT NULL,
+	user_id BIGINT NOT NULL,
 	code CHAR(10) UNIQUE NOT NULL,
 	source payment_source DEFAULT 'midtrans'::payment_source NOT NULL,
 	status payment_status DEFAULT 'pending'::payment_status NOT NULL,
 	type payment_type DEFAULT 'donation'::payment_type NOT NULL,
+	method payment_method DEFAULT 'none'::payment_method NOT NULL,
 	amount NUMERIC(10, 2) NOT NULL,
-	method payment_method,
 	currency VARCHAR(5),
 	bank_name VARCHAR(8),
 	va_number VARCHAR(50),
