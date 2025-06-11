@@ -3,52 +3,91 @@ package service
 import (
 	"context"
 
+	donationcmd "github.com/arvinpaundra/cent/payment/application/command/donation"
 	"github.com/arvinpaundra/cent/payment/domain/donation/constant"
-	"github.com/arvinpaundra/cent/payment/domain/donation/dto/request"
 	"github.com/arvinpaundra/cent/payment/domain/donation/entity"
 	"github.com/arvinpaundra/cent/payment/domain/donation/repository"
 )
 
 type CreateDonationHandler struct {
-	paymentWriter  repository.PaymentWriter
-	paymentGateway repository.PaymentGateway
+	paymentWriter       repository.PaymentWriter
+	paymentGateway      repository.PaymentGateway
+	unitOfWork          repository.UnitOfWork
+	userClientMapper    repository.UserClientMapper
+	contentClientMapper repository.ContentClientMapper
 }
 
 func NewCreateDonationHandler(
 	paymentWriter repository.PaymentWriter,
 	paymentGateway repository.PaymentGateway,
+	unitOfWork repository.UnitOfWork,
+	userClientMapper repository.UserClientMapper,
+	contentClientMapper repository.ContentClientMapper,
 ) CreateDonationHandler {
 	return CreateDonationHandler{
-		paymentWriter:  paymentWriter,
-		paymentGateway: paymentGateway,
+		paymentWriter:       paymentWriter,
+		paymentGateway:      paymentGateway,
+		unitOfWork:          unitOfWork,
+		userClientMapper:    userClientMapper,
+		contentClientMapper: contentClientMapper,
 	}
 }
 
-func (s CreateDonationHandler) Handle(ctx context.Context, payload request.CreateDonation) (string, error) {
+func (s CreateDonationHandler) Handle(ctx context.Context, command donationcmd.CreateDonation) (*string, error) {
+	// find user by slug
+	user, err := s.userClientMapper.FindUserDetail(ctx, command.UserSlug)
+	if err != nil {
+		return nil, err
+	}
+
 	payment := entity.Payment{
-		UserId: payload.UserId,
+		UserId: user.ID,
 		Source: constant.PaymentSourceMidtrans,
 		Type:   constant.PaymentTypeDonation,
 		Status: constant.PaymentStatusPending,
-		Amount: payload.Amount,
+		Method: constant.PaymentMethodNone,
+		Amount: command.Amount,
 	}
 
-	err := payment.GenerateCode()
+	err = payment.GenerateCode()
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+
+	content, err := s.contentClientMapper.FindActiveContent(ctx, user.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	var campaignId *int64
+
+	if content.CampaignId != 0 {
+		campaignId = &content.CampaignId
 	}
 
 	paymentDetail := &entity.PaymentDetail{
-		Name:  payload.Name,
-		Email: &payload.Email,
-		Phone: &payload.Phone,
+		ContentId:  content.ID,
+		Name:       command.Name,
+		Message:    command.Message,
+		CampaignId: campaignId,
+		Email:      command.Email,
+		Phone:      command.Phone,
 	}
 
 	payment.SetPaymentDetail(paymentDetail)
 
-	err = s.paymentWriter.Save(ctx, payment)
+	tx, err := s.unitOfWork.Begin()
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+
+	err = tx.PaymentWriter().Save(ctx, &payment)
+	if err != nil {
+		if uowErr := tx.Rollback(); uowErr != nil {
+			return nil, uowErr
+		}
+
+		return nil, err
 	}
 
 	paymentGateway := entity.PaymentGateway{
@@ -57,10 +96,31 @@ func (s CreateDonationHandler) Handle(ctx context.Context, payload request.Creat
 	}
 
 	// create payment through payment gateway
-	paymentUrl, err := s.paymentGateway.Pay(ctx, paymentGateway)
+	paymentLink, err := s.paymentGateway.Pay(ctx, &paymentGateway)
 	if err != nil {
-		return "", err
+		if uowErr := tx.Rollback(); uowErr != nil {
+			return nil, uowErr
+		}
+
+		return nil, err
 	}
 
-	return paymentUrl, nil
+	payment.SetPaymentLink(paymentLink)
+
+	payment.MarkToBeUpdated()
+
+	err = tx.PaymentWriter().Save(ctx, &payment)
+	if err != nil {
+		if uowErr := tx.Rollback(); uowErr != nil {
+			return nil, uowErr
+		}
+
+		return nil, err
+	}
+
+	if uowErr := tx.Commit(); uowErr != nil {
+		return nil, uowErr
+	}
+
+	return &paymentLink, nil
 }

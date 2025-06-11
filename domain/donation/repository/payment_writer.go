@@ -7,5 +7,5 @@ import (
 )
 
 type PaymentWriter interface {
-	Save(ctx context.Context, payment entity.Payment) error
+	Save(ctx context.Context, payment *entity.Payment) error
 }

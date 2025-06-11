@@ -7,5 +7,5 @@ import (
 )
 
 type PaymentGateway interface {
-	Pay(ctx context.Context, pg entity.PaymentGateway) (string, error)
+	Pay(ctx context.Context, pg *entity.PaymentGateway) (string, error)
 }

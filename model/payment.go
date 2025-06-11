@@ -14,7 +14,7 @@ type Payment struct {
 	Status      string
 	Type        string
 	Amount      float64
-	Method      null.String
+	Method      string
 	Currency    null.String
 	BankName    null.String
 	QrCode      null.String

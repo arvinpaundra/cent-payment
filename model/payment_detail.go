@@ -7,11 +7,14 @@ import (
 )
 
 type PaymentDetail struct {
-	ID        int64
-	PaymentId int64
-	Name      string
-	Phone     null.String
-	Email     null.String
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID         int64
+	PaymentId  int64
+	ContentId  int64
+	Name       string
+	Message    string
+	CampaignId null.Int64
+	Phone      null.String
+	Email      null.String
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }

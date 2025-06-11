@@ -47,6 +47,7 @@ const (
 	PaymentMethodShopeepay    PaymentMethod = "shopeepay"
 	PaymentMethodQris         PaymentMethod = "qris"
 	PaymentMethodBankTransfer PaymentMethod = "bank_transfer"
+	PaymentMethodNone         PaymentMethod = "none"
 	PaymentMethodOthers       PaymentMethod = "others"
 )
 

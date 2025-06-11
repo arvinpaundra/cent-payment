@@ -40,3 +40,5 @@ migratedown:
 migratereset:
 	@echo "Execute reset all migrations"
 	migrate -path $(MIGRATION_PATH) -database "$(DB_URL)" -verbose drop -f
+
+migraterefresh: migratedown migrateup

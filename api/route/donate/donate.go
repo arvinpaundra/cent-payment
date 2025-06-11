@@ -6,7 +6,7 @@ import (
 )
 
 func PublicRoute(g *gin.RouterGroup, cont rest.Controller) {
-	donate := g.Group("/donate")
+	donate := g.Group("/donate/:slug")
 
 	donate.POST("", cont.CreateDonation)
 }
