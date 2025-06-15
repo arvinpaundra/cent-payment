@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"time"
 
 	donationcmd "github.com/arvinpaundra/cent/payment/application/command/donation"
 	"github.com/arvinpaundra/cent/payment/domain/donation/constant"
+	"github.com/arvinpaundra/cent/payment/domain/donation/data"
 	"github.com/arvinpaundra/cent/payment/domain/donation/entity"
 	"github.com/arvinpaundra/cent/payment/domain/donation/repository"
 )
@@ -41,13 +43,15 @@ func (s CreateDonationHandler) Handle(ctx context.Context, command donationcmd.C
 	}
 
 	payment := entity.Payment{
-		UserId: user.ID,
-		Source: constant.PaymentSourceMidtrans,
-		Type:   constant.PaymentTypeDonation,
-		Status: constant.PaymentStatusPending,
-		Method: constant.PaymentMethodNone,
-		Amount: command.Amount,
+		UserId:  user.ID,
+		Source:  constant.PaymentSourceMidtrans,
+		Method:  constant.PaymentMethodNone,
+		Status:  constant.PaymentStatusPending,
+		Purpose: constant.PaymentPurposeDonation,
+		Amount:  command.Amount,
 	}
+
+	payment.SetExpiredAt(time.Now().UTC().Add(constant.PaymentExpiredAfterFitfteenMinutes))
 
 	err = payment.GenerateCode()
 	if err != nil {
@@ -90,13 +94,13 @@ func (s CreateDonationHandler) Handle(ctx context.Context, command donationcmd.C
 		return nil, err
 	}
 
-	paymentGateway := entity.PaymentGateway{
+	paymentGateway := data.PaymentGatewayRequest{
 		Amount: payment.Amount,
 		Code:   payment.Code,
 	}
 
 	// create payment through payment gateway
-	paymentLink, err := s.paymentGateway.Pay(ctx, &paymentGateway)
+	paymentGatewayResult, err := s.paymentGateway.Pay(ctx, &paymentGateway)
 	if err != nil {
 		if uowErr := tx.Rollback(); uowErr != nil {
 			return nil, uowErr
@@ -105,7 +109,7 @@ func (s CreateDonationHandler) Handle(ctx context.Context, command donationcmd.C
 		return nil, err
 	}
 
-	payment.SetPaymentLink(paymentLink)
+	payment.SetPaymentLink(paymentGatewayResult.Url)
 
 	payment.MarkToBeUpdated()
 
@@ -122,5 +126,5 @@ func (s CreateDonationHandler) Handle(ctx context.Context, command donationcmd.C
 		return nil, uowErr
 	}
 
-	return &paymentLink, nil
+	return &paymentGatewayResult.Url, nil
 }

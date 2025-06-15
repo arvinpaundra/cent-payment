@@ -18,16 +18,16 @@ type Payment struct {
 	UserId      int64
 	Code        string
 	Source      constant.PaymentSource
-	Type        constant.PaymentType
-	Status      constant.PaymentStatus
 	Method      constant.PaymentMethod
+	Status      constant.PaymentStatus
+	Purpose     constant.PaymentPurpose
 	Amount      float64
+	Reference   *string
 	Currency    *string
-	BankName    *string
-	VaNumber    *string
 	Qrcode      *string
 	PaymentLink *string
 	ExpiredAt   *time.Time
+	PaidAt      *time.Time
 
 	PaymentDetail *PaymentDetail
 }
@@ -55,27 +55,20 @@ func (e *Payment) GenerateCode() error {
 	return nil
 }
 
-func (e *Payment) IsBankTransfer() bool {
-	return e.Method == constant.PaymentMethodBankTransfer
+func (e *Payment) SetExpiredAt(t time.Time) {
+	e.ExpiredAt = &t
 }
 
-func (e *Payment) SetBankName(bankName string) {
-	e.BankName = &bankName
+func (e *Payment) SetPaidAt(t time.Time) {
+	e.PaidAt = &t
 }
 
 func (e *Payment) SetPaymentLink(url string) {
 	e.PaymentLink = &url
 }
 
-func (e *Payment) SetPaymentDetail(pd *PaymentDetail) {
-	e.PaymentDetail = &PaymentDetail{
-		ContentId:  pd.ContentId,
-		Name:       pd.Name,
-		Message:    pd.Message,
-		Phone:      pd.Phone,
-		Email:      pd.Email,
-		CampaignId: pd.CampaignId,
-	}
+func (e *Payment) SetPaymentDetail(paymentDetail *PaymentDetail) {
+	e.PaymentDetail = paymentDetail
 }
 
 type PaymentDetail struct {

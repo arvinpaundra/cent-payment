@@ -3,7 +3,7 @@ package donation
 import (
 	"context"
 
-	"github.com/arvinpaundra/cent/payment/domain/donation/entity"
+	"github.com/arvinpaundra/cent/payment/domain/donation/data"
 	"github.com/midtrans/midtrans-go"
 	"github.com/midtrans/midtrans-go/snap"
 )
@@ -28,7 +28,7 @@ func NewMidtrans(serverKey, mode string) Midtrans {
 	}
 }
 
-func (r Midtrans) Pay(ctx context.Context, pg *entity.PaymentGateway) (string, error) {
+func (r Midtrans) Pay(ctx context.Context, pg *data.PaymentGatewayRequest) (*data.PaymentGatewayResponse, error) {
 	// TODO: future we will migrate to coreapi to improvise UI/UX
 	client := snap.Client{}
 
@@ -36,15 +36,20 @@ func (r Midtrans) Pay(ctx context.Context, pg *entity.PaymentGateway) (string, e
 
 	payload := r.parse(pg)
 
-	url, err := client.CreateTransactionUrl(&payload)
+	res, err := client.CreateTransaction(&payload)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return url, nil
+	result := data.PaymentGatewayResponse{
+		Token: res.Token,
+		Url:   res.RedirectURL,
+	}
+
+	return &result, nil
 }
 
-func (r Midtrans) parse(pg *entity.PaymentGateway) snap.Request {
+func (r Midtrans) parse(pg *data.PaymentGatewayRequest) snap.Request {
 	payload := snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  pg.Code,
@@ -53,10 +58,6 @@ func (r Midtrans) parse(pg *entity.PaymentGateway) snap.Request {
 		EnabledPayments: []snap.SnapPaymentType{
 			snap.PaymentTypeGopay,
 			snap.PaymentTypeShopeepay,
-			snap.PaymentTypeBCAVA,
-			snap.PaymentTypeBRIVA,
-			snap.PaymentTypeBNIVA,
-			snap.PaymentTypePermataVA,
 			snap.PaymentTypeEChannel,
 		},
 		Expiry: &snap.ExpiryDetails{

@@ -12,14 +12,17 @@ type Payment struct {
 	Code        string
 	Source      string
 	Status      string
-	Type        string
-	Amount      float64
 	Method      string
+	Purpose     string
+	Amount      float64
+	Reference   null.String
 	Currency    null.String
-	BankName    null.String
 	QrCode      null.String
 	PaymentLink null.String
 	ExpiredAt   null.Time
+	PaidAt      null.Time
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
+
+	PaymentDetail *PaymentDetail
 }
