@@ -3,6 +3,7 @@ package route
 import (
 	"github.com/arvinpaundra/cent/payment/api/middleware"
 	"github.com/arvinpaundra/cent/payment/api/route/donate"
+	"github.com/arvinpaundra/cent/payment/api/route/webhook"
 	"github.com/arvinpaundra/cent/payment/application/rest"
 	"github.com/arvinpaundra/cent/payment/core/grpc"
 	"github.com/arvinpaundra/cent/payment/core/validator"
@@ -38,6 +39,7 @@ func (r *Routes) WithPublic() *Routes {
 	v1 := r.g.Group("/api/v1")
 
 	donate.PublicRoute(v1, r.cont)
+	webhook.PublicRoute(v1, r.cont)
 
 	return r
 }

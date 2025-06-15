@@ -3,7 +3,6 @@ package donation
 import (
 	"context"
 	"database/sql"
-	"errors"
 
 	"github.com/arvinpaundra/cent/payment/domain/donation/entity"
 	"github.com/arvinpaundra/cent/payment/model"
@@ -26,18 +25,18 @@ func (r PaymentWriterRepository) Save(ctx context.Context, payment *entity.Payme
 		return r.update(ctx, payment)
 	}
 
-	return errors.New("unsupported database operation")
+	return nil
 }
 
 func (r PaymentWriterRepository) insert(ctx context.Context, payment *entity.Payment) error {
 	paymentModel := model.Payment{
-		UserId: payment.UserId,
-		Code:   payment.Code,
-		Source: payment.Source.String(),
-		Status: payment.Status.String(),
-		Type:   payment.Type.String(),
-		Method: payment.Method.String(),
-		Amount: payment.Amount,
+		UserId:  payment.UserId,
+		Code:    payment.Code,
+		Source:  payment.Source.String(),
+		Status:  payment.Status.String(),
+		Method:  payment.Method.String(),
+		Purpose: payment.Purpose.String(),
+		Amount:  payment.Amount,
 	}
 
 	err := r.db.WithContext(ctx).
@@ -87,18 +86,14 @@ func (r PaymentWriterRepository) insert(ctx context.Context, payment *entity.Pay
 
 func (r PaymentWriterRepository) update(ctx context.Context, payment *entity.Payment) error {
 	paymentModel := model.Payment{
-		UserId:      payment.UserId,
-		Code:        payment.Code,
-		Source:      payment.Source.String(),
-		Status:      payment.Status.String(),
-		Type:        payment.Type.String(),
-		Method:      payment.Method.String(),
-		Amount:      payment.Amount,
-		PaymentLink: null.StringFromPtr(payment.PaymentLink),
-		Currency:    null.StringFromPtr(payment.Currency),
-		QrCode:      null.StringFromPtr(payment.Qrcode),
-		BankName:    null.StringFromPtr(payment.BankName),
-		ExpiredAt:   null.TimeFromPtr(payment.ExpiredAt),
+		UserId:    payment.UserId,
+		Status:    payment.Status.String(),
+		Method:    payment.Method.String(),
+		Amount:    payment.Amount,
+		Reference: null.StringFromPtr(payment.Reference),
+		Currency:  null.StringFromPtr(payment.Currency),
+		QrCode:    null.StringFromPtr(payment.Qrcode),
+		PaidAt:    null.TimeFromPtr(payment.PaidAt),
 	}
 
 	err := r.db.WithContext(ctx).

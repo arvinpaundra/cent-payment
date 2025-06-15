@@ -7,5 +7,5 @@ import (
 )
 
 type ContentClientMapper interface {
-	FindActiveContent(ctx context.Context, userId int64) (*data.ContentActiveResponse, error)
+	FindActiveContent(ctx context.Context, userId int64) (*data.ActiveContentResponse, error)
 }

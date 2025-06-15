@@ -1,7 +1,5 @@
 package constant
 
-import "time"
-
 type PaymentSource string
 
 func (c PaymentSource) String() string {
@@ -49,8 +47,4 @@ const (
 	PaymentMethodQris      PaymentMethod = "qris"
 	PaymentMethodNone      PaymentMethod = "none"
 	PaymentMethodOthers    PaymentMethod = "others"
-)
-
-const (
-	PaymentExpiredAfterFitfteenMinutes = 15 * time.Minute
 )

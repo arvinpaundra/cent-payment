@@ -17,7 +17,7 @@ func NewContentClientMapper(client content.ContentServiceClient) ContentClientMa
 	}
 }
 
-func (r ContentClientMapper) FindActiveContent(ctx context.Context, userId int64) (*data.ContentActiveResponse, error) {
+func (r ContentClientMapper) FindActiveContent(ctx context.Context, userId int64) (*data.ActiveContentResponse, error) {
 	req := &content.FindActiveContentRequest{
 		UserId: userId,
 	}
@@ -27,7 +27,7 @@ func (r ContentClientMapper) FindActiveContent(ctx context.Context, userId int64
 		return nil, err
 	}
 
-	result := data.ContentActiveResponse{
+	result := data.ActiveContentResponse{
 		ID:         resp.GetId(),
 		CampaignId: resp.GetCampaignId(),
 	}
