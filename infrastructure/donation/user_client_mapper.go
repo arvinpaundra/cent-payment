@@ -3,10 +3,13 @@ package donation
 import (
 	"context"
 
-	"github.com/arvinpaundra/cent/payment/domain/donation/data"
+	"github.com/arvinpaundra/cent/payment/domain/donation/external"
+	"github.com/arvinpaundra/cent/payment/domain/donation/repository"
 	userpb "github.com/arvinpaundra/centpb/gen/go/user/v1"
 	"google.golang.org/grpc/metadata"
 )
+
+var _ repository.UserClientMapper = (*UserClientMapper)(nil)
 
 type UserClientMapper struct {
 	client userpb.UserServiceClient
@@ -23,30 +26,23 @@ func NewUserClientMapper(
 	}
 }
 
-func (r UserClientMapper) FindUserDetail(ctx context.Context, slug string) (*data.UserResponse, error) {
-	req := &userpb.FindUserDetailRequest{
+func (r UserClientMapper) FindUserBySlug(ctx context.Context, slug string) (*external.UserResponse, error) {
+	req := &userpb.FindUserBySlugRequest{
 		Slug: slug,
 	}
 
 	ctx = metadata.NewOutgoingContext(ctx, metadata.Pairs("api-key", r.apiKey))
 
-	resp, err := r.client.FindUserDetail(ctx, req)
+	resp, err := r.client.FindUserBySlug(ctx, req)
 	if err != nil {
 		return nil, err
 	}
 
-	var image *string
-
-	if resp.GetImage() != nil {
-		imageStr := resp.GetImage().GetValue()
-		image = &imageStr
-	}
-
-	result := data.UserResponse{
-		ID:       resp.GetId(),
-		Fullname: resp.GetFullname(),
-		Email:    resp.GetEmail(),
-		Image:    image,
+	result := external.UserResponse{
+		ID:       resp.User.GetId(),
+		Fullname: resp.User.GetFullname(),
+		Email:    resp.User.GetEmail(),
+		Image:    resp.User.Image,
 	}
 
 	return &result, nil

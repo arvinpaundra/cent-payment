@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/arvinpaundra/cent/payment/api/route"
+	"github.com/arvinpaundra/cent/payment/application/rest/router"
 	"github.com/arvinpaundra/cent/payment/config"
 	"github.com/arvinpaundra/cent/payment/core"
 	"github.com/arvinpaundra/cent/payment/core/grpc"
@@ -39,14 +39,7 @@ var restCmd = &cobra.Command{
 			},
 		)
 
-		_ = route.NewRoutes(
-			g,
-			grpcClient,
-			sqlpkg.GetConnection(),
-			validator.NewValidator(),
-		).WithPublic().
-			WithPrivate().
-			WithInternal()
+		router.Register(g, grpcClient, sqlpkg.GetConnection(), validator.NewValidator())
 
 		srv := http.Server{
 			Addr:    fmt.Sprintf(":%s", restPort),

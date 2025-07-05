@@ -1,4 +1,4 @@
-package rest
+package handler
 
 import (
 	"net/http"
@@ -12,23 +12,23 @@ import (
 	"github.com/spf13/viper"
 )
 
-func (cont Controller) MidtransUpdatePayment(c *gin.Context) {
+func (h Handler) MidtransUpdatePayment(c *gin.Context) {
 	var command webhookcmd.MidtransUpdateWebhook
 
 	_ = c.ShouldBindJSON(&command)
 
-	handler := service.NewMidtransUpdatePaymentHandler(
-		webhookinfra.NewPaymentReaderRepository(cont.db),
-		webhookinfra.NewPaymentWriterRepository(cont.db),
-		webhookinfra.NewOutboxWriterRepository(cont.db),
-		webhookinfra.NewUnitOfWork(cont.db),
+	svc := service.NewMidtransUpdatePayment(
+		webhookinfra.NewPaymentReaderRepository(h.db),
+		webhookinfra.NewPaymentWriterRepository(h.db),
+		webhookinfra.NewOutboxWriterRepository(h.db),
+		webhookinfra.NewUnitOfWork(h.db),
 		webhookinfra.NewUserClientMapper(
-			cont.grpcClient.UserClient(),
+			h.grpcClient.UserClient(),
 			viper.GetString("USER_CLIENT_API_KEY"),
 		),
 	)
 
-	err := handler.Handle(c, command)
+	err := svc.Exec(c, command)
 	if err != nil {
 		switch err {
 		case constant.ErrPaymentNotFound, constant.ErrPaymentAlreadyPaid, constant.ErrInequalPaidAmount:

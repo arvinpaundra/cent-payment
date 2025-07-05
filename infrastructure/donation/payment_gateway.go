@@ -3,7 +3,7 @@ package donation
 import (
 	"context"
 
-	"github.com/arvinpaundra/cent/payment/domain/donation/data"
+	"github.com/arvinpaundra/cent/payment/domain/donation/external"
 	"github.com/midtrans/midtrans-go"
 	"github.com/midtrans/midtrans-go/snap"
 )
@@ -28,7 +28,7 @@ func NewMidtrans(serverKey, mode string) Midtrans {
 	}
 }
 
-func (r Midtrans) Pay(ctx context.Context, pg *data.PaymentGatewayRequest) (*data.PaymentGatewayResponse, error) {
+func (r Midtrans) Pay(ctx context.Context, pg *external.PaymentGatewayRequest) (*external.PaymentGatewayResponse, error) {
 	// TODO: future we will migrate to coreapi to improvise UI/UX
 	client := snap.Client{}
 
@@ -41,7 +41,7 @@ func (r Midtrans) Pay(ctx context.Context, pg *data.PaymentGatewayRequest) (*dat
 		return nil, err
 	}
 
-	result := data.PaymentGatewayResponse{
+	result := external.PaymentGatewayResponse{
 		Token: res.Token,
 		Url:   res.RedirectURL,
 	}
@@ -49,7 +49,7 @@ func (r Midtrans) Pay(ctx context.Context, pg *data.PaymentGatewayRequest) (*dat
 	return &result, nil
 }
 
-func (r Midtrans) parse(pg *data.PaymentGatewayRequest) snap.Request {
+func (r Midtrans) parse(pg *external.PaymentGatewayRequest) snap.Request {
 	payload := snap.Request{
 		TransactionDetails: midtrans.TransactionDetails{
 			OrderID:  pg.Code,

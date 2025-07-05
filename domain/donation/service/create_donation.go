@@ -6,12 +6,12 @@ import (
 
 	donationcmd "github.com/arvinpaundra/cent/payment/application/command/donation"
 	"github.com/arvinpaundra/cent/payment/domain/donation/constant"
-	"github.com/arvinpaundra/cent/payment/domain/donation/data"
 	"github.com/arvinpaundra/cent/payment/domain/donation/entity"
+	"github.com/arvinpaundra/cent/payment/domain/donation/external"
 	"github.com/arvinpaundra/cent/payment/domain/donation/repository"
 )
 
-type CreateDonationHandler struct {
+type CreateDonation struct {
 	paymentWriter       repository.PaymentWriter
 	paymentGateway      repository.PaymentGateway
 	unitOfWork          repository.UnitOfWork
@@ -19,14 +19,14 @@ type CreateDonationHandler struct {
 	contentClientMapper repository.ContentClientMapper
 }
 
-func NewCreateDonationHandler(
+func NewCreateDonation(
 	paymentWriter repository.PaymentWriter,
 	paymentGateway repository.PaymentGateway,
 	unitOfWork repository.UnitOfWork,
 	userClientMapper repository.UserClientMapper,
 	contentClientMapper repository.ContentClientMapper,
-) CreateDonationHandler {
-	return CreateDonationHandler{
+) CreateDonation {
+	return CreateDonation{
 		paymentWriter:       paymentWriter,
 		paymentGateway:      paymentGateway,
 		unitOfWork:          unitOfWork,
@@ -35,9 +35,9 @@ func NewCreateDonationHandler(
 	}
 }
 
-func (s CreateDonationHandler) Handle(ctx context.Context, command donationcmd.CreateDonation) (*string, error) {
+func (s CreateDonation) Exec(ctx context.Context, command donationcmd.CreateDonation) (*string, error) {
 	// find user by slug
-	user, err := s.userClientMapper.FindUserDetail(ctx, command.UserSlug)
+	user, err := s.userClientMapper.FindUserBySlug(ctx, command.UserSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +94,7 @@ func (s CreateDonationHandler) Handle(ctx context.Context, command donationcmd.C
 		return nil, err
 	}
 
-	paymentGateway := data.PaymentGatewayRequest{
+	paymentGateway := external.PaymentGatewayRequest{
 		Amount: payment.Amount,
 		Code:   payment.Code,
 	}

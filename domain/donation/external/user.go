@@ -1,4 +1,4 @@
-package data
+package external
 
 type UserResponse struct {
 	ID       int64

@@ -1,4 +1,4 @@
-package rest
+package handler
 
 import (
 	"fmt"
@@ -12,12 +12,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-func (cont Controller) CreateDonation(c *gin.Context) {
+func (h Handler) CreateDonation(c *gin.Context) {
 	var command donationcmd.CreateDonation
 
 	_ = c.ShouldBindJSON(&command)
 
-	verrs := cont.validator.Validate(command)
+	verrs := h.validator.Validate(command)
 	if verrs != nil {
 		c.JSON(http.StatusBadRequest, format.BadRequest("invalid request body", verrs))
 		return
@@ -27,23 +27,23 @@ func (cont Controller) CreateDonation(c *gin.Context) {
 
 	command.UserSlug = slug
 
-	handler := service.NewCreateDonationHandler(
-		donationinfra.NewPaymentWriterRepository(cont.db),
+	svc := service.NewCreateDonation(
+		donationinfra.NewPaymentWriterRepository(h.db),
 		donationinfra.NewMidtrans(
 			viper.GetString("MIDTRANS_SERVER_KEY"),
 			viper.GetString("MIDTRANS_MODE"),
 		),
-		donationinfra.NewUnitOfWork(cont.db),
+		donationinfra.NewUnitOfWork(h.db),
 		donationinfra.NewUserClientMapper(
-			cont.grpcClient.UserClient(),
+			h.grpcClient.UserClient(),
 			viper.GetString("USER_CLIENT_API_KEY"),
 		),
 		donationinfra.NewContentClientMapper(
-			cont.grpcClient.ContentClient(),
+			h.grpcClient.ContentClient(),
 		),
 	)
 
-	res, err := handler.Handle(c, command)
+	res, err := svc.Exec(c, command)
 	if err != nil {
 		fmt.Println("error:", err.Error())
 		switch err {

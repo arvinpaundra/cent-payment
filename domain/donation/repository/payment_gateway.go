@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/arvinpaundra/cent/payment/domain/donation/data"
+	"github.com/arvinpaundra/cent/payment/domain/donation/external"
 )
 
 type PaymentGateway interface {
-	Pay(ctx context.Context, pg *data.PaymentGatewayRequest) (*data.PaymentGatewayResponse, error)
+	Pay(ctx context.Context, pg *external.PaymentGatewayRequest) (*external.PaymentGatewayResponse, error)
 }
