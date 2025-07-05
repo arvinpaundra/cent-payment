@@ -1,4 +1,4 @@
-package rest
+package handler
 
 import (
 	"github.com/arvinpaundra/cent/payment/core/grpc"
@@ -6,14 +6,14 @@ import (
 	"gorm.io/gorm"
 )
 
-type Controller struct {
+type Handler struct {
 	db         *gorm.DB
 	grpcClient *grpc.Client
 	validator  *validator.Validator
 }
 
-func NewController(db *gorm.DB, grpcClient *grpc.Client, validator *validator.Validator) Controller {
-	return Controller{
+func NewHandler(db *gorm.DB, grpcClient *grpc.Client, validator *validator.Validator) Handler {
+	return Handler{
 		db:         db,
 		grpcClient: grpcClient,
 		validator:  validator,

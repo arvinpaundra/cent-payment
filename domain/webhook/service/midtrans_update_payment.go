@@ -12,13 +12,13 @@ import (
 	webhookcmd "github.com/arvinpaundra/cent/payment/application/command/webhook"
 	"github.com/arvinpaundra/cent/payment/core/util"
 	"github.com/arvinpaundra/cent/payment/domain/webhook/constant"
-	"github.com/arvinpaundra/cent/payment/domain/webhook/data"
 	"github.com/arvinpaundra/cent/payment/domain/webhook/entity"
+	"github.com/arvinpaundra/cent/payment/domain/webhook/external"
 	"github.com/arvinpaundra/cent/payment/domain/webhook/repository"
 	"github.com/spf13/viper"
 )
 
-type MidtransUpdatePaymentHandler struct {
+type MidtransUpdatePayment struct {
 	paymentReader    repository.PaymentReader
 	paymentWriter    repository.PaymentWriter
 	outboxWriter     repository.OutboxWriter
@@ -26,14 +26,14 @@ type MidtransUpdatePaymentHandler struct {
 	userClientMapper repository.UserClientMapper
 }
 
-func NewMidtransUpdatePaymentHandler(
+func NewMidtransUpdatePayment(
 	paymentReader repository.PaymentReader,
 	paymentWriter repository.PaymentWriter,
 	outboxWriter repository.OutboxWriter,
 	uow repository.UnitOfWork,
 	userClientMapper repository.UserClientMapper,
-) MidtransUpdatePaymentHandler {
-	return MidtransUpdatePaymentHandler{
+) MidtransUpdatePayment {
+	return MidtransUpdatePayment{
 		paymentReader:    paymentReader,
 		paymentWriter:    paymentWriter,
 		outboxWriter:     outboxWriter,
@@ -42,7 +42,7 @@ func NewMidtransUpdatePaymentHandler(
 	}
 }
 
-func (s MidtransUpdatePaymentHandler) Handle(ctx context.Context, command webhookcmd.MidtransUpdateWebhook) error {
+func (s MidtransUpdatePayment) Exec(ctx context.Context, command webhookcmd.MidtransUpdateWebhook) error {
 	payment, err := s.paymentReader.FindByCode(ctx, command.OrderId)
 	if err != nil {
 		return err
@@ -86,13 +86,24 @@ func (s MidtransUpdatePaymentHandler) Handle(ctx context.Context, command webhoo
 	}
 
 	if payment.IsPaid() {
+		user, err := s.userClientMapper.FindUserDetail(ctx, payment.UserId)
+		if err != nil {
+			if uowErr := tx.Rollback(); uowErr != nil {
+				return uowErr
+			}
+
+			return err
+		}
+
 		outboxPayload := struct {
 			UserId  int64   `json:"user_id"`
+			UserKey string  `json:"user_key"`
 			Amount  float64 `json:"amount"`
 			Sender  string  `json:"sender"`
 			Message string  `json:"message"`
 		}{
 			UserId:  payment.UserId,
+			UserKey: user.Key,
 			Amount:  payment.Amount,
 			Sender:  payment.PaymentDetail.Name,
 			Message: payment.PaymentDetail.Message,
@@ -122,7 +133,7 @@ func (s MidtransUpdatePaymentHandler) Handle(ctx context.Context, command webhoo
 			return err
 		}
 
-		updateBalancePayload := data.UpdateBalanceUserRequest{
+		updateBalancePayload := external.UpdateBalanceUserRequest{
 			UserId: payment.UserId,
 			Amount: payment.Amount,
 		}
@@ -144,7 +155,7 @@ func (s MidtransUpdatePaymentHandler) Handle(ctx context.Context, command webhoo
 	return nil
 }
 
-func (s MidtransUpdatePaymentHandler) paymentStatus(status string) constant.PaymentStatus {
+func (s MidtransUpdatePayment) paymentStatus(status string) constant.PaymentStatus {
 	switch status {
 	case "settlement":
 		return constant.PaymentStatusPaid
@@ -157,7 +168,7 @@ func (s MidtransUpdatePaymentHandler) paymentStatus(status string) constant.Paym
 	}
 }
 
-func (s MidtransUpdatePaymentHandler) paymentMethod(method string) constant.PaymentMethod {
+func (s MidtransUpdatePayment) paymentMethod(method string) constant.PaymentMethod {
 	switch method {
 	case "gopay":
 		return constant.PaymentMethodGopay
@@ -170,7 +181,7 @@ func (s MidtransUpdatePaymentHandler) paymentMethod(method string) constant.Paym
 	}
 }
 
-func (s MidtransUpdatePaymentHandler) validate(payment *entity.Payment, command webhookcmd.MidtransUpdateWebhook) error {
+func (s MidtransUpdatePayment) validate(payment *entity.Payment, command webhookcmd.MidtransUpdateWebhook) error {
 	payload := fmt.Sprintf("%s+%s+%s+%s", command.OrderId, command.StatusCode, command.GrossAmount, viper.GetString("MIDTRANS_SERVER_KEY"))
 
 	hash := sha512.Sum512([]byte(payload))

@@ -1,4 +1,4 @@
-package data
+package external
 
 type PaymentGatewayRequest struct {
 	Amount float64

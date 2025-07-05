@@ -1,4 +1,4 @@
-package data
+package external
 
 type ActiveContentResponse struct {
 	ID         int64

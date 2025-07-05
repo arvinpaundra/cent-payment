@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/arvinpaundra/cent/payment/domain/donation/data"
+	"github.com/arvinpaundra/cent/payment/domain/donation/external"
 )
 
 type UserClientMapper interface {
-	FindUserDetail(ctx context.Context, slug string) (*data.UserResponse, error)
+	FindUserBySlug(ctx context.Context, slug string) (*external.UserResponse, error)
 }
